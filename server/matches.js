@@ -6,6 +6,8 @@ const { nameMaps } = require('./standings');
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 const MIN_GAP_MINUTES = 120;
+// 只有待赛与已赛真正占用场地时段：延期已改期待定、取消不再进行，原时段都要让出来
+const SLOT_HOLDING_STATUS = ['待赛', '已赛'];
 
 function minutesOf(time) {
   const [hour, minute] = time.split(':').map(Number);
@@ -98,11 +100,11 @@ function validatePayload(input, data, selfId) {
     throw new ApiError(409, 'ROUND_CONFLICT', `第 ${round} 轮里这两支球队已经各有一场了，同一轮不能重复出场`, 'round');
   }
 
-  // 同一天同一块场地不能挨得太近
+  // 同一天同一块场地不能挨得太近；延期与取消的场次不占时段，既不挡别人也不参与比较
   const resolved = resolveVenueId(candidate, data);
-  if (resolved) {
+  if (resolved && SLOT_HOLDING_STATUS.includes(status)) {
     const sameDay = data.matches.filter((item) => item.id !== selfId && item.date === date
-      && resolveVenueId(item, data) === resolved && item.status !== '取消');
+      && resolveVenueId(item, data) === resolved && SLOT_HOLDING_STATUS.includes(item.status));
     const clash = sameDay.find((item) => Math.abs(minutesOf(item.kickoff) - minutesOf(kickoff)) < MIN_GAP_MINUTES);
     if (clash) {
       const venue = data.venues.find((item) => item.id === resolved);
