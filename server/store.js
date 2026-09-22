@@ -62,7 +62,9 @@ function seedData() {
         round,
         date,
         kickoff: i % 2 === 0 ? '15:30' : '19:30',
-        venueId: i === 3 ? 'venue-2004' : null,
+        // 前三轮 i=3 那场历史上就排在场中立体育场（显式指定）；从第四轮起场地留空按主队主场解析，
+        // 否则第四轮海陵对洛水会被硬塞到中立体育场，与延期场的原时段叠在一起
+        venueId: round <= 3 && i === 3 ? 'venue-2004' : null,
         homeTeamId: i % 2 === 0 ? home : away,
         awayTeamId: i % 2 === 0 ? away : home,
         status: played ? '已赛' : (isPostponed ? '延期' : '待赛'),

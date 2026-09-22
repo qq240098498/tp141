@@ -101,8 +101,9 @@ function validatePayload(input, data, selfId) {
   // 同一天同一块场地不能挨得太近
   const resolved = resolveVenueId(candidate, data);
   if (resolved) {
+    // 延期（改期待定）与取消的场次都不再占用原场地时段，只有待赛/已赛才参与两小时间隔校验
     const sameDay = data.matches.filter((item) => item.id !== selfId && item.date === date
-      && resolveVenueId(item, data) === resolved && item.status !== '取消');
+      && resolveVenueId(item, data) === resolved && item.status !== '取消' && item.status !== '延期');
     const clash = sameDay.find((item) => Math.abs(minutesOf(item.kickoff) - minutesOf(kickoff)) < MIN_GAP_MINUTES);
     if (clash) {
       const venue = data.venues.find((item) => item.id === resolved);
